@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>臺鐵運轉 · Rail Driver Taiwan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="gl"></canvas>
+      <div id="cabframe" class="hidden"><div class="pillar l"></div><div class="pillar r"></div><div class="visor"></div></div>
+
+      <div id="hud" class="hidden">
+        <div id="led">
+          <div class="led-row"><span class="led-tag">下一停車站</span><span id="led-next">—</span></div>
+          <div class="led-row small" id="led-sub">—</div>
+        </div>
+        <div id="status">
+          <div class="stat"><div class="lbl">持時 TIME</div><div class="val" id="life">0</div></div>
+          <div class="stat"><div class="lbl">得分 SCORE</div><div class="val" id="score">0</div></div>
+        </div>
+        <div id="messages"></div>
+        <div id="approach" class="hidden">
+          <div class="lbl">停車位置 STOP TARGET</div>
+          <div id="approach-dist">0<span>m</span></div>
+          <div class="ap-bar"><div id="ap-fill"></div></div>
+          <div id="approach-req"></div>
+        </div>
+        <div id="dash">
+          <div class="panel speedo-wrap"><canvas id="speedo" width="250" height="250"></canvas></div>
+          <div class="panel" id="notch-panel"><div class="lbl">主控制器</div><div id="notches"></div></div>
+          <div class="panel" id="atp-panel">
+            <div class="atp-head">ATP 限速</div>
+            <div class="atp-lim"><span id="atp-lim">—</span><small>km/h</small></div>
+            <div class="atp-row" id="atp-next">—</div>
+            <div class="atp-row sig"><span class="sig-lamps" id="sig-lamps"><i></i><i></i><i></i><i></i></span><span id="sig-dist">—</span></div>
+            <div class="atp-row" id="grade">—</div>
+          </div>
+          <div class="panel" id="tt-panel">
+            <div class="tt-row"><span>停車站</span><b id="tt-sta">—</b></div>
+            <div class="tt-row"><span>時刻</span><b id="tt-arr">—</b></div>
+            <div class="tt-row"><span>現在</span><b id="tt-now">—</b></div>
+            <div class="tt-row"><span>距離</span><b id="tt-dist">—</b></div>
+            <div class="tt-row delta" id="tt-delta"></div>
+          </div>
+          <div class="panel" id="lamps-panel">
+            <canvas id="bc" width="110" height="110"></canvas>
+            <div class="lamps">
+              <div class="lamp" id="lamp-door">車門</div>
+              <div class="lamp red" id="lamp-atp">ATP</div>
+              <div class="lamp red" id="lamp-eb">EB</div>
+            </div>
+          </div>
+        </div>
+        <div id="touch">
+          <button data-act="power">▲<small>加速</small></button>
+          <button data-act="brake">▼<small>制動</small></button>
+          <button data-act="eb" class="eb">EB</button>
+          <button data-act="horn">鳴笛</button>
+          <button data-act="ff">快轉</button>
+          <button data-act="cam">視角</button>
+        </div>
+        <div id="help-hint">F1 操作說明 · C 視角 · Esc 暫停</div>
+      </div>
+
+      <div id="title" class="screen">
+        <div class="title-inner">
+          <header class="brand">
+            <div class="brand-mark">臺鐵運轉</div>
+            <div class="brand-sub">RAIL DRIVER <b>TAIWAN</b></div>
+            <div class="brand-tag">程序生成路線 · 電車駕駛模擬 &nbsp;/&nbsp; Procedurally generated TRA driving</div>
+          </header>
+          <section>
+            <h3>路線 <span>LINE</span></h3>
+            <div class="cards" id="line-cards"></div>
+          </section>
+          <section>
+            <h3>車種 <span>TRAIN</span></h3>
+            <div class="cards" id="train-cards"></div>
+          </section>
+          <section class="row">
+            <div class="field">
+              <h3>起站 <span>FROM</span></h3>
+              <select id="start-select"></select>
+            </div>
+            <div class="field">
+              <h3>停車站數 <span>STOPS</span> <b id="stops-val">5</b></h3>
+              <input type="range" id="stops" min="3" max="8" value="5" />
+              <div class="route-preview" id="route-preview"></div>
+            </div>
+          </section>
+          <section class="row">
+            <div class="field">
+              <h3>時段 <span>TIME</span></h3>
+              <div class="seg" id="time-seg"></div>
+            </div>
+            <div class="field">
+              <h3>難度 <span>DIFFICULTY</span></h3>
+              <div class="seg" id="diff-seg"></div>
+            </div>
+            <div class="field">
+              <h3>種子 <span>SEED</span></h3>
+              <div class="seed"><input id="seed" type="text" spellcheck="false" /><button id="dice" title="隨機 Randomise">🎲</button></div>
+            </div>
+          </section>
+          <div class="start-row">
+            <button id="start-btn">出發 <small>START</small></button>
+            <button id="help-btn" class="ghost">操作說明 <small>CONTROLS</small></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading" class="screen hidden">
+        <div class="load-box">
+          <div class="load-title" id="load-title">路線生成中…</div>
+          <div class="load-bar"><div id="load-fill"></div></div>
+          <div class="load-sub" id="load-sub">Generating route</div>
+        </div>
+      </div>
+
+      <div id="pause" class="screen hidden">
+        <div class="menu-box">
+          <h2>暫停 <small>PAUSED</small></h2>
+          <button data-p="resume">繼續 Resume</button>
+          <button data-p="restart">重新開始 Restart</button>
+          <button data-p="help">操作說明 Controls</button>
+          <button data-p="quit" class="ghost">回主選單 Title</button>
+          <div class="vol"><span>音量 Volume</span><input type="range" id="volume" min="0" max="100" value="55" /></div>
+        </div>
+      </div>
+
+      <div id="help" class="screen hidden">
+        <div class="menu-box wide">
+          <h2>操作說明 <small>CONTROLS</small></h2>
+          <div class="help-grid">
+            <div><kbd>↑</kbd><kbd>W</kbd> 主控制器往「加速」側 (P1–P5)<br /><small>Notch toward POWER</small></div>
+            <div><kbd>↓</kbd><kbd>S</kbd> 主控制器往「制動」側 (B1–B8)<br /><small>Notch toward BRAKE</small></div>
+            <div><kbd>Space</kbd> 非常制動 EB<br /><small>Emergency brake</small></div>
+            <div><kbd>N</kbd> 惰行 N (neutral)</div>
+            <div><kbd>H</kbd> 鳴笛 (看到「鳴」標誌時)<br /><small>Horn at whistle boards</small></div>
+            <div><kbd>Enter</kbd> 停站時快轉<br /><small>Fast-forward station dwell</small></div>
+            <div><kbd>C</kbd> 切換視角 (駕駛室 / 追蹤 / 路旁)<br /><small>Camera</small></div>
+            <div>滑鼠滾輪 = 主控制器 · 拖曳 = 環顧<br /><small>Wheel = controller, drag = look around</small></div>
+          </div>
+          <div class="rules">
+            <p><b>目標：</b>依時刻表準點到站，並把列車精準停在停車位置標 (黃色「停車」牌)。誤差 10 cm 以內為<b>完美停車</b>。</p>
+            <p><b>持時：</b>誤點、超速、未鳴笛、非常制動與冒進號誌都會扣除持時，歸零即遊戲結束；準點與精準停車可加回時間。</p>
+            <p><b>號誌：</b>綠 = 線路最高速；黃綠 = 75；黃 = 45；紅 = 停車。出發號誌在發車時刻轉綠。</p>
+            <p><small>Arrive on time and stop at the yellow stop marker. Delays, overspeed, missed horns and emergency braking cost time; precision stops and punctual arrivals earn it back. Signals: G = line speed, YG = 75, Y = 45, R = stop.</small></p>
+          </div>
+          <button id="help-close">關閉 Close</button>
+        </div>
+      </div>
+
+      <div id="result" class="screen hidden">
+        <div class="menu-box wide">
+          <h2 id="res-title">任務完成</h2>
+          <div class="res-top">
+            <div class="rank" id="res-rank">A</div>
+            <div class="res-stats" id="res-stats"></div>
+          </div>
+          <table class="res-table" id="res-table"></table>
+          <div class="start-row">
+            <button data-r="retry">再挑戰 <small>RETRY</small></button>
+            <button data-r="new">新路線 <small>NEW SEED</small></button>
+            <button data-r="title" class="ghost">主選單 <small>TITLE</small></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

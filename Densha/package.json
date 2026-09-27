@@ -1,0 +1,18 @@
+{
+  "name": "taitie-de-go",
+  "version": "1.0.0",
+  "description": "Procedurally generated Taiwan Railway driving game in the style of Densha de Go",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}
