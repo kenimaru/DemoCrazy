@@ -1,2 +1,4 @@
 node_modules/
-dist/
+# keep only the playable single-file build
+dist/*
+!dist/index.html

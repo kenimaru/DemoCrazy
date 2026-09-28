@@ -2,10 +2,17 @@
 
 A Densha-de-Go-style driving game on procedurally generated Taiwan Railway (TRA) routes, built with Three.js.
 
+**Play without installing anything:** download [`dist/index.html`](dist/index.html) and double-click it.
+
+To work on the code:
+
 ```
 npm install
 npm run dev      # http://localhost:5174
+npm run build    # dist/index.html: one self-contained file, playable by double-clicking
 ```
+
+Opening the project's own `index.html` directly does not work; it needs the dev server. The built `dist/index.html` has all code inlined, so it runs from disk. It only needs internet for the web fonts.
 
 ## Gameplay
 - One-handle master controller: P1–P5, N, B1–B8, EB. Air brakes and traction respond with lag.

@@ -282,7 +282,7 @@ export function createAssets(renderer) {
   {
     const walls = new THREE.BoxGeometry(1, 2.0, 1).translate(0, 1.0, 0);
     const roof = prismGeo(1.1, 0.6, 1.04).translate(0, 2.0, 0);
-    A.shedGeo = mergeGeometries([walls.toNonIndexed(), roof.toNonIndexed()]);
+    A.shedGeo = mergeGeometries([walls.toNonIndexed(), roof]);
     A.shedGeo.computeVertexNormals();
   }
   A.tankGeo = new THREE.CylinderGeometry(0.55, 0.55, 1.4, 10).rotateZ(Math.PI / 2).translate(0, 0.9, 0);
@@ -291,7 +291,7 @@ export function createAssets(renderer) {
   {
     const body = new THREE.BoxGeometry(30, 7, 40).translate(0, 3.5, 0);
     const roof = prismGeo(31, 2.4, 40.6).translate(0, 7, 0);
-    A.factoryGeo = mergeGeometries([body.toNonIndexed(), roof.toNonIndexed()]);
+    A.factoryGeo = mergeGeometries([body.toNonIndexed(), roof]);
     A.factoryGeo.computeVertexNormals();
   }
   // rural brick house with tile gable roof (long axis along x)
